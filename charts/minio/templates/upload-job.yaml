@@ -1,0 +1,47 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "minio.fullname" . }}-upload-job
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ include "minio.name" . }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-delete-policy": hook-succeeded
+spec:
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: upload-images
+          image: curlimages/curl
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -x
+
+              echo "Waiting for MinIO to be ready..."
+              until curl -s http://{{ include "minio.fullname" . }}:9000/minio/health/ready; do
+                echo "Still waiting..."
+                sleep 2
+              done
+
+              echo "Downloading mc client..."
+              wget -q https://dl.min.io/client/mc/release/linux-amd64/mc -O /tmp/mc && chmod +x /tmp/mc
+
+              echo "Setting up MinIO alias..."
+              /tmp/mc alias set local http://{{ include "minio.fullname" . }}:9000 {{ .Values.secret.accessKey }} {{ .Values.secret.secretKey }}
+              /tmp/mc mb --ignore-existing local/{{ .Values.bucketName }} || true
+
+              # Create HTML
+              echo "<html><body><h1>What's Up🚀</h1><iframe src="https://giphy.com/embed/mLN43NzeQMTJrNz4Y4" width="480" height="480" style="" frameBorder="0" class="giphy-embed" allowFullScreen></iframe><p><a href="https://giphy.com/gifs/meaning-of-life-meme-mLN43NzeQMTJrNz4Y4">via GIPHY</a></p></body></html>" > /tmp/index.html
+
+              # Upload HTML
+              /tmp/mc cp /tmp/index.html local/{{ $.Values.bucketName }}/index.html
+
+              echo "Downloading and uploading images..."
+              {{- range $index, $url := .Values.imagesToDownload }}
+              curl -L -o /tmp/image{{$index}}.gif "{{ $url }}"
+              /tmp/mc cp /tmp/image{{$index}}.gif local/{{ $.Values.bucketName }}/image{{$index}}.gif
+              {{- end }}

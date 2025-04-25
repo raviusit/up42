@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "s3www.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    App: {{ include "s3www.name" . }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      App: {{ include "s3www.name" . }}
+  template:
+    metadata:
+      labels:
+        App: {{ include "s3www.name" . }}
+    spec:
+      containers:
+        - name: {{ include "s3www.name" . }}
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.container.port }}
+          args:
+            {{- range .Values.args }}
+            - {{ . }}
+            {{- end }}
+          env:
+            - name: AWS_ACCESS_KEY_ID
+              value: {{ .Values.env.AWS_ACCESS_KEY_ID }}
+            - name: AWS_SECRET_ACCESS_KEY
+              value: {{ .Values.env.AWS_SECRET_ACCESS_KEY }}
+            - name : S3WWW_ADDRESS
+              value: {{ .Values.env.S3WWW_ADDRESS }}
+          resources:
+            requests:
+              memory: {{ .Values.resources.requests.memory }}
+              cpu: {{ .Values.resources.requests.cpu }}
+            limits:
+              memory: {{ .Values.resources.limits.memory }}
+              cpu: {{ .Values.resources.limits.cpu }}

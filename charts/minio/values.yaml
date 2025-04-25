@@ -1,0 +1,61 @@
+replicaCount: 1
+
+image:
+  repository: quay.io/minio/minio
+  tag: latest
+  pullPolicy: IfNotPresent
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi
+
+bucketName: s3www-static  # This is correct, it's at the root level
+
+imagesToDownload:
+  - https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif
+  - https://media3.giphy.com/media/VdiQKDAguhDSi37gn1/giphy.gif
+  - https://media3.giphy.com/media/7JjRCjPMplDWBkOAIP/giphy.gif
+  - https://media1.giphy.com/media/vAvuIyU8lILMK7xD5B/giphy.gif
+
+hpa:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 50
+
+persistence:
+  enabled: true
+  accessMode: ReadWriteOnce
+  size: 10Gi
+  storageClass: ""
+
+secret:
+  name: minio-secret
+  accessKey: minioadmin
+  secretKey: minioadmin
+
+service:
+  type: ClusterIP
+  ports:
+    - name: api
+      port: 9000
+      targetPort: 9000
+    - name: console
+      port: 9001
+      targetPort: 9001
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+  hosts:
+    - host: minio.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
