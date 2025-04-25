@@ -94,12 +94,16 @@ Resolution - https://medium.com/@sushantkumarsinha22/kubernetes-setting-up-ingre
 But then I realised I usually use kind setup for local testing and its very easy to set up.
 
 
-```bash
+```
+
 kind create cluster --name=kindv1.32
 OR
 kind create cluster --config kind-example-config.yaml
+```
 
 contents in the kind-example-config.yaml
+
+``` bash
 # three node (two workers) cluster config
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
@@ -107,11 +111,12 @@ nodes:
 - role: control-plane
 - role: worker
 - role: worker
+```
 
 To Install Cluster with ingress (https://kind.sigs.k8s.io/docs/user/ingress/)
+Choose Option 2: extraPortMapping
 
-Option 2: extraPortMapping
-```
+```bash
 cat <<EOF | kind create cluster --config=-
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
@@ -126,8 +131,10 @@ nodes:
     protocol: TCP
 EOF
 ```
-kubectl apply -f https://kind.sigs.k8s.io/examples/ingress/deploy-ingress-nginx.yaml
 
+To apply ingress -
+```bash
+kubectl apply -f https://kind.sigs.k8s.io/examples/ingress/deploy-ingress-nginx.yaml
 ```
 
 
@@ -152,6 +159,14 @@ docker push raviusit/s3www:<image tag>
 ```
 
 ### 1.2 Update image tag in the s3wwww chart values.yaml
+
+ /charts/s3www/values.yaml
+
+```bash
+image:
+  repository: raviusit/s3www
+  tag: <image tag>
+```
 
 ### 2. Create namespaces
 
