@@ -84,12 +84,74 @@ An S3-compatible, Kubernetes-native object store used in this setup as the backe
 
 ## 🛠 Step-by-Step Deployment
 
+### Setup any k8s cluster
+
+I've chosen KIND Cluster (https://kind.sigs.k8s.io/docs/user/quick-start/), because I ran into an issue with minikube as I was running it on M1 pro. while testing application, the ingress not working on Mac M1 host machine
+
+Issue - https://github.com/kubernetes/minikube/issues/13510
+Resolution - https://medium.com/@sushantkumarsinha22/kubernetes-setting-up-ingress-on-apple-silicon-mac-m1-5fb6bddcb838
+
+But then I realised I usually use kind setup for local testing and its very easy to set up.
+
+
+```bash
+kind create cluster --name=kindv1.32
+OR
+kind create cluster --config kind-example-config.yaml
+
+contents in the kind-example-config.yaml
+# three node (two workers) cluster config
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+- role: control-plane
+- role: worker
+- role: worker
+
+To Install Cluster with ingress (https://kind.sigs.k8s.io/docs/user/ingress/)
+
+Option 2: extraPortMapping
+```
+cat <<EOF | kind create cluster --config=-
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+- role: control-plane
+  extraPortMappings:
+  - containerPort: 80
+    hostPort: 80
+    protocol: TCP
+  - containerPort: 443
+    hostPort: 443
+    protocol: TCP
+EOF
+```
+kubectl apply -f https://kind.sigs.k8s.io/examples/ingress/deploy-ingress-nginx.yaml
+
+```
+
+
 ### 1. Clone this repository
 
 ```bash
 git clone https://github.com/raviusit/up42.git
 cd up42
 ```
+
+### 1.1 Building s3www latest image
+
+go to the /s3www-app folder
+
+Since I'm still on M1 pro, the arch type (arm64) is different than where we are going to deploy this app (amd64)
+So, use the commands to change the archtype, this will generate a Go binary named s3www -
+```bash
+GOOS=linux GOARCH=amd64 go build -o s3www .
+docker buildx build --platform linux/amd64,linux/arm64 -t raviusit/s3www .
+docker image tag raviusit/s3www raviusit/s3www:<image tag>
+docker push raviusit/s3www:<image tag>
+```
+
+### 1.2 Update image tag in the s3wwww chart values.yaml
 
 ### 2. Create namespaces
 
