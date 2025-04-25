@@ -16,7 +16,6 @@ resources:
 bucketName: s3www-static  # This is correct, it's at the root level
 
 imagesToDownload:
-  - https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif
   - https://media3.giphy.com/media/VdiQKDAguhDSi37gn1/giphy.gif
   - https://media3.giphy.com/media/7JjRCjPMplDWBkOAIP/giphy.gif
   - https://media1.giphy.com/media/vAvuIyU8lILMK7xD5B/giphy.gif
