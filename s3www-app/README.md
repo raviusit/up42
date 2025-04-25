@@ -14,7 +14,7 @@ Released binaries are available [here](https://github.com/harshavardhana/s3www/r
 > NOTE: minimum Go version needed is v1.18
 
 ```
-go install github.com/harshavardhana/s3www@latest
+go install github.com/raviusit/up42/s3www-app@latest
 ```
 
 ## Binary

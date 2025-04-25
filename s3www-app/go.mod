@@ -1,4 +1,4 @@
-module github.com/harshavardhana/s3www
+module github.com/raviusit/up42/s3www-app
 
 go 1.22.0
 
