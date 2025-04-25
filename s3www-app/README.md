@@ -1,4 +1,4 @@
-![s3www](https://raw.githubusercontent.com/raviusit/up42/s3www-app/main/s3www.png)
+![s3www](https://raw.githubusercontent.com/raviusit/up42/main/s3www-app/s3www.png)
 
 Serve static files from any S3 compatible object storage endpoints.
 
@@ -9,7 +9,7 @@ Serve static files from any S3 compatible object storage endpoints.
 - Automatic certs renewal for your DOMAIN along with OCSP stapling, full suite of ACME features, HTTP->HTTPS redirection (all thanks to [certmagic](https://github.com/caddyserver/certmagic)).
 
 ## Install
-Released binaries are available [here](https://github.com/harshavardhana/s3www/releases), or you can compile yourself from source.
+Released binaries are available [here](https://github.com/raviusit/up42/releases), or you can compile yourself from source.
 
 > NOTE: minimum Go version needed is v1.18
 
