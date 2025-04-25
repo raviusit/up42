@@ -1,3 +1,12 @@
+terraform {
+  required_providers {
+    helm = {
+      source  = "hashicorp/helm"
+      version = "2.9.0"
+    }
+  }
+}
+
 provider "helm" {
   kubernetes {
     config_path = "~/.kube/config"
@@ -6,8 +15,18 @@ provider "helm" {
 
 resource "helm_release" "minio" {
   name       = "minio"
-  chart      = "./minio-chart"
-  namespace  = "default"
-  create_namespace = true
-  values     = [file("${path.module}/minio-chart/values.yaml")]
+  namespace  = "up42"
+  chart      = "./minio"
+  values = [
+    file("./minio/values.yaml")
+  ]
+}
+
+resource "helm_release" "s3www" {
+  name       = "s3www"
+  namespace  = "up42"
+  chart      = "./s3www"
+  values = [
+    file("./s3www/values.yaml")
+  ]
 }
