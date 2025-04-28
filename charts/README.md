@@ -1,6 +1,6 @@
-# MinIO Helm Chart with Terraform
+# S3www and MinIO Helm Chart with Terraform
 
-This repository contains a Helm chart and Terraform configuration for deploying MinIO on a Kubernetes cluster, specifically tested with a local Kind cluster.
+This repository contains a Helm chart and Terraform configuration for deploying S3www and MinIO on a Kubernetes cluster, specifically tested with a local Kind cluster.
 
 ## 🧰 Prerequisites
 
@@ -37,21 +37,38 @@ kubectl wait --namespace ingress-nginx --for=condition=Ready pod --selector=app.
 
 ```bash
 echo "127.0.0.1 minio.local" | sudo tee -a /etc/hosts
+echo "127.0.0.1 s3www.local" | sudo tee -a /etc/hosts
 ```
 
 ### 4. Deploy using Terraform
 
 ```bash
 terraform init
+terraform plan
 terraform apply
 ```
 
-### 5. Access MinIO
+### 5. Access s3www
 
 Open in browser:
 
 ```
-http://minio.local/
+http://s3www.local/
+```
+
+Login credentials:
+- Access Key: `minioadmin`
+- Secret Key: `minioadmin`
+
+
+### 5. Access minio
+
+kubectl port-forward svc/minio-minio 9001:9001 -n up42
+
+Open in browser:
+
+```
+http://localhost:9001/
 ```
 
 Login credentials:
@@ -62,7 +79,8 @@ Login credentials:
 
 ## 🛠️ Project Structure
 
-- `minio-chart/`: Helm chart
+- `charts/minio`: Helm chart
+- `charts/s3www`: Helm chart
 - `main.tf`: Terraform config
 - `.github/workflows/deploy.yaml`: GitHub Actions workflow
 
