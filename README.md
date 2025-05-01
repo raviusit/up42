@@ -79,6 +79,7 @@ An S3-compatible, Kubernetes-native object store used in this setup as the backe
 - Helm 3.x+
 - `kubectl` access to your cluster
 - Ingress controller (e.g., NGINX)
+- Prometheus  
 
 ---
 
@@ -98,7 +99,7 @@ But then I realised I usually use kind setup for local testing and its very easy
 
 kind create cluster --name=kindv1.32
 OR
-kind create cluster --config kind-example-config.yaml
+kind create cluster --config kind-example-config.yaml 
 ```
 
 contents in the kind-example-config.yaml
@@ -122,6 +123,8 @@ kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 nodes:
 - role: control-plane
+# - role: worker
+# - role: worker
   extraPortMappings:
   - containerPort: 80
     hostPort: 80
@@ -132,11 +135,67 @@ nodes:
 EOF
 ```
 
+```Note: this is a single node cluster, if you want multinode cluster then uncomment the lines for role
+```
+
 To apply ingress -
+
 ```bash
 kubectl apply -f https://kind.sigs.k8s.io/examples/ingress/deploy-ingress-nginx.yaml
 ```
 
+To install Prometheus - 
+
+```bash
+brew install helm  # macOS
+
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
+
+
+helm install prometheus prometheus-community/kube-prometheus-stack \
+  --namespace monitoring \
+  --create-namespace
+```
+
+```
+This will install:
+Prometheus
+Alertmanager
+Grafana
+The Prometheus Operator
+Node exporters, kube-state-metrics, and more.
+```
+
+Verify that pods are running - 
+```bash
+kubectl get pods -n monitoring
+```
+
+Accessing Prometheus/Grafana Dashboards
+For local clusters like kind, expose them with port-forwarding:
+
+Prometheus:
+```bash
+kubectl port-forward svc/prometheus-kube-prometheus-prometheus -n monitoring 9090:9090
+```
+Visit: http://localhost:9090
+
+Grafana:
+```bash
+kubectl port-forward svc/prometheus-grafana -n monitoring 3000:80
+```
+Visit: http://localhost:3000
+
+
+Default Grafana login:
+
+User: admin
+Password: prom-operator (can be retrieved via secret)
+
+```bash
+kubectl get secret prometheus-grafana -n monitoring -o jsonpath="{.data.admin-password}" | base64 --decode
+```
 
 ### 1. Clone this repository
 
@@ -176,27 +235,13 @@ kubectl create namespace up42
 
 ---
 
-### 3. Deploy MinIO
+### 3. Deploy minIO and s3www
 
-Install MinIO with values:
-
-```bash
+```bash 
 cd charts
-helm  --install minio charts/minio -n up42
+terraform plan
+terraform apply
 ```
-
-> This installs MinIO with S3 access keys, and readiness for external access via Ingress.
-
----
-
-### 4. Deploy s3www
-
-Install the custom `s3www` chart:
-
-```bash
-helm --install s3www charts/s3www  -n up42
-```
-
 ---
 
 ### 5. Access Your Services
@@ -204,10 +249,10 @@ helm --install s3www charts/s3www  -n up42
 #### 📂 MinIO Console
 
 ```bash
-kubectl port-forward svc/minio-minio 9000:9000 -n up42
+kubectl port-forward svc/minio-minio 9001:9001 -n up42
 ```
 
-Visit: [http://localhost:9000](http://localhost:9000)  
+Visit: [http://localhost:9001](http://localhost:9000)  
 Login using credentials from `charts/minio/values.yaml`.
 
 #### 🌍 s3www Site
@@ -215,7 +260,7 @@ Login using credentials from `charts/minio/values.yaml`.
 The Ingress is enabled in `charts/s3www/values.yaml`, visit:
 
 ```
-http://s3www.local
+https://s3www.local
 ```
 
 Or port-forward directly:
@@ -326,7 +371,7 @@ ingress:
 
 ## 🔒 Security & Production Tips
 
-- Use secrets for credentials in production (`SealedSecrets` or `External Secrets`)
+- Use secrets for credentials in production (`External Secrets`)
 - Enable TLS using `cert-manager` or your Ingress provider
 - Use MinIO buckets with versioning enabled
 - Enable access logging on the s3www server
@@ -337,9 +382,7 @@ ingress:
 ## 🔁 Cleanup
 
 ```bash
-helm uninstall s3www -n up42
-helm uninstall minio -n up42
-kubectl delete namespace up42
+terraform destroy
 ```
 
 ---
